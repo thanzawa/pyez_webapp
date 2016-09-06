@@ -1,0 +1,114 @@
+{% extends "bootstrap/base.html" %} 
+
+{% block title %}Juniper PyEZ Demo{% endblock %}
+
+{% block head %}
+{{super()}}
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.0/css/bootstrap-select.min.css">
+    
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.0/js/bootstrap-select.min.js"></script>
+    
+    <!-- (Optional) Latest compiled and minified JavaScript translation files -->
+{% endblock %}
+
+{% block body %}
+<link type=text/css href="{{ url_for('static', filename='simple-sidebar.css') }}" rel="stylesheet">
+
+
+  <div id="wrapper">
+    {% include 'sidebar.html' %}
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+
+
+    <div id="page-content-wrapper"><div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-12">
+          <h1>Show Devices</h1>
+        </div>
+      </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+    <!-- /#wrapper -->
+
+    
+    <form class="form-inline" action="{{ url_for('show_result') }}" method=post name="show_result">
+      <select class="selectpicker" name="command">
+        <option value="-">-</option>
+        <option value="show_vlan_table">show vlan</option>
+        <option value="show_lldp_table">show lldp table</option>
+        <option value="show_route">show route</option>
+        <option value="show_ethernet-switching_table">show ethernet-switching table</option>
+      </select>
+      <input class="btn btn-primary" type="submit"><br>
+    <!--
+    <div class="dropdown">
+    	<button class="btn btn-default dropdown-toggle" type="button" name="command"data-toggle="dropdown">
+    	 Command	
+    		<span class="caret"></span>
+    	</button>
+    	<ul class="dropdown-menu" role="menu">
+    		<li role="presentation"><a href="#" value="show_vlans" onclick="document.check_count.submit()">show vlan table</a></li>
+    		<li role="presentation"><a href="#">show routing table</a></li>
+    		<li role="presentation"><a href="#">show MAC table</a></li>
+    	</ul>
+    </div>
+    -->
+  </div>
+
+  <div class="col-lg-12"> 
+    <div class="panel panel-primary">
+    	<div class="panel-heading">
+      <big>Junos Device List ({{ query_count }} devices are connected)</big>
+    	</div>
+    
+    	<table class="table table-striped">
+    		<thead>
+    			<tr>
+            <th></th>
+    				<th>IP Address</th>
+    				<th>Host name</th>
+    				<th>Model</th>
+    				<!-- th>Serial Number</th -->
+            <th>OS Version</th>
+    			</tr>
+    		</thead>
+    		<tbody>
+          {% for device in devices %}
+
+          <tr>
+
+            <th><input type="checkbox" name="check" value={{ device }}></th>
+            {% include '/dev_info/facts/' + device ignore missing %}
+          </tr>
+          {% else %}
+          <tr>
+            <th></th>
+            <th>None</th>
+            <th>None</th>
+            <th>None</th>
+            <th>None</th>
+          </tr>
+          {% endfor %}
+    		</tbody>
+    	</table>
+     </form>
+    </div>
+  </div>
+
+
+
+</div>
+</div>
+
+
+  
+
+{% endblock %}
+

@@ -1,0 +1,74 @@
+{% extends "bootstrap/base.html" %} 
+
+
+{% block body %}
+<link type=text/css href="{{ url_for('static', filename='simple-sidebar.css') }}" rel="stylesheet">
+
+
+<!--
+  <form action="{{ url_for('add_entry') }}" method=post class=add-entry>
+    <dl>
+      <dt>Title:
+      <dd><input type=text size=20 name=title>
+      <dt>Text:
+      <dd><textarea name=text rows=5 cols=20></textarea>
+      <dd><input type=submit value=Share>
+    </dl>
+  </form>
+
+  <form action="{{ url_for('collect_dev_info') }}" method=post class=add-entry>
+    <dl>
+      <dt>Start IP Address:
+      <dd><input type=text size=20 name=start_addr>
+      <dt>End IP Address:
+      <dd><input type=text size=20 name=end_addr>
+      <dd><input type=submit class="btn btn-info" value="Get Information"></dl>
+  </form>
+--!>
+<!--
+  <ul class=entries>
+  {% for entry in entries %}
+    <li><h2>{{ entry.title }}</h2>{{ entry.text|safe }}
+  {% else %}
+    <li><em>Unbelievable.  No entries here so far</em>
+  {% endfor %}
+  </ul>
+--!>
+
+  <ul class=entries>
+<!--  
+  {% for device in devices %}
+    <li><h2>{{ device.hostname }}</h2>{{ device.ip_addr }}
+  {% else %}
+    <li><em>None</em>
+  {% endfor %}
+  </ul>
+--!>
+  <table class="table table-striped">
+    <tr>
+      <th>IP Address</th>
+      <th>Host name</th>
+      <th>Model</th>
+      <th>Serial Number</th>
+      <th>OS Version</th>
+    </tr>
+    {% for device in devices %}
+    <tr>
+      <th>{{ device.ip_addr }}</th>
+      <th>{{ device.hostname }}</th>
+      <th>{{ device.model }}</th>
+      <th>{{ device.serial_num }}</th>
+      <th>{{ device.os_version }}</th>
+    </tr>
+    {% else %}
+    <tr>
+      <th>None</th>
+      <th>None</th>
+    </tr>
+    {% endfor %}
+  </table>
+    
+  
+
+{% endblock %}
+

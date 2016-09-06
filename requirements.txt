@@ -1,0 +1,8 @@
+Flask
+Flask-SQLAlchemy
+junos-eznc
+flask-bootstrap
+more-itertools
+uwsgi
+networkx
+matplotlib

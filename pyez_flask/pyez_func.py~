@@ -1,0 +1,181 @@
+# coding: utf-8
+from jnpr.junos import Device
+from jnpr.junos import exception as EzErrors
+from pyez_flask import app, db
+from pyez_flask.models import Entry, Dev
+from more_itertools import chunked
+from lxml import etree, fromstring
+import sys
+import config
+import time
+
+Device.auto_probe = 1 
+#Device.timeout = 1
+#gather_facts
+
+def call_dev(ip_addr):
+  user = 'lab'
+  password = 'lab'
+
+  dev = Device(host=ip_addr, user='lab', password='lab')
+  
+
+  return dev
+
+
+def get_device_information(ip_addr):
+  #dev = call_dev(ip_addr)
+   
+  user = 'lab'
+  password = 'lab'
+
+  dev = Device(host=ip_addr, user='lab', password='lab')
+  
+  try:
+    dev.open()
+
+  except:
+    print 'could not connect'
+    return None
+  
+  dev_dict = dev.facts
+  dev.close()
+
+  if 'hostname' in dev_dict == False:
+    dev_dict['hostname'] = "" 
+  
+  
+  device = Dev(
+            ip_addr = ip_addr,
+            hostname = dev_dict.get('hostname'),
+            model = dev_dict.get('model'),
+            serial_num = dev_dict.get('serialnumber'),
+            os_version = dev_dict.get('version'),
+            ip_addr_int = addr_to_i(ip_addr) 
+          )
+  
+  db.session.add(device)
+  print 'add'
+  db.session.commit()
+  print 'commit'
+
+def register_dev(dev_dict, addr):
+
+  dev = Dev(
+          ip_addr = addr,
+          hostname = dev_dict['hostname'],
+          model = dev_dict['model'],
+          serial_num = dev_dict['serialnumber'],
+          os_version = dev_dict['version']
+        )
+  db.session.add(dev)
+  db.session.commit()
+
+def get_register_dev(ip_addr):
+  dev_dict = get_device_information(ip_addr)
+
+  if dev_dict != None:
+    register_dev(dev_dict, ip_addr)
+
+def get_vlans_xml(dev, ip_addr, filename):
+  result = dev.rpc.get_vlan_information()
+
+  f = open(filename, 'w')
+  f.write(etree.tostring(result))
+  f.close()
+  
+
+def create_vlans_table(dev, ip_addr):
+  result = '<table border=1><tr><th>VLAN Name</th><th>VLAN ID</th><th>Interfaces</th></tr>\n'
+  
+  rpc_response = dev.rpc.get_vlan_information()
+  
+  #root = etree.parse('172.27.112.201_vlans.xml')
+  #root = etree.parse(filename)
+  root = fromstring(rpc_response)
+  vlan_entries = root.xpath('//vlan')
+
+  for vlan in vlan_entries:
+    vlan_name = vlan.find('vlan-name').text
+    vlan_id = vlan.find('vlan-tag').text
+    member_ifs = vlan.xpath('descendant::' + 'vlan-member-interface')
+    if_num = len(member_ifs)
+
+    result += '<tr><td rowspan=' + str(if_num) + '>' + vlan_name + '</td>'
+    result += '<td rowspan=' + str(if_num) + '>' + vlan_id + '</td>\n' 
+    i = 0
+    for member_if in member_ifs:
+      if isinstance(member_if.text, str):
+        if_text = member_if.text
+      else:
+        if_text = None
+
+      if i == 0:
+        result += '<td>' + if_text + '</td></tr>\n'
+      else:
+        result += '<tr><td>' + if_text + '</td></tr>\n'
+
+      i += 1
+
+  result += '</table>'
+  return result
+
+
+
+
+
+def create_addr_list(start_addr='192.168.1.1', end_addr='192.168.1.2'):
+  end_addr_split = end_addr.split('.')
+  
+  addr = start_addr
+
+  f = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'w')
+  f.write(addr + '\n')
+
+  
+  while True:
+    
+    addr_split = addr.split('.')
+    addr_int = map(int, addr_split)
+
+    if addr_int[3] == 255 and addr_int[2] == 255 and addr_int[1] == 255 and addr_int[0] == 255:
+      break
+    elif addr_int[3] == 255 and addr_int[2] == 255 and addr_int[1] == 255 and addr_int[0] != 255:
+      addr_int[3] = 0
+      addr_int[2] = 0
+      addr_int[1] = 0
+      addr_int[0] += 1
+
+    elif addr_int[3] == 255 and addr_int[2] == 255 and addr_int[1] != 255:
+      addr_int[3] = 0
+      addr_int[2] = 0
+      addr_int[1] += 1
+
+    elif addr_int[3] == 255 and addr_int[2] != 255:
+      addr_int[3] = 0
+      addr_int[2] += 1
+    else:
+      addr_int[3] += 1
+
+    addr_str = map(str, addr_int)
+    addr = '.'.join(addr_str)
+    
+    f.write(addr + '\n')
+
+    if addr_str == end_addr_split:
+      break
+  
+  f.close()
+
+
+def get_split_list(addr_list, n):
+  return list(chunked(addr_list, len(addr_list) / n + 1))
+
+def addr_to_i(addr):
+  addr_list = addr.split('.')
+  result = []
+  for i in addr_list:
+    result.append(i.zfill(3))
+
+  return "".join(result)
+

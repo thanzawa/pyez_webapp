@@ -11,12 +11,14 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 ## Features
 * デバイスとの接続と情報の取得
 * 任意のデバイスの情報の表示
+* 設定情報の一括変更
 * 取得情報を基にしたトポロジの可視化
 * （今後、その他の機能を追加予定）
 
 
 * Connect to Junos devices and collect device informations
-* Show device informations at multi devices
+* Show device informations at selected devices
+* Change configurations at selected devices
 * Visualization of network topology
 * (Under Development)
 

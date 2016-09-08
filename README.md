@@ -14,6 +14,11 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 * 取得情報を基にしたトポロジの可視化
 * （今後、その他の機能を追加予定）
 
+* Connect to Junos devices and collect device informations
+* Show device informations at multi devices
+* Visualization of network topology
+* (Under Development)
+
 ## Install
 
 `pip install -r requirements.txt`

@@ -1,5 +1,3 @@
-# pyez_webapp
-
 ## Web application used PyEZ + Flask
 ====
 

@@ -19,7 +19,7 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 * Connect to Junos devices and collect device informations
 * Show device informations at selected devices
 * Change configurations at selected devices
-* Visualization of network topology
+* Visualization of network topology using PyEZ, NetworkX, Matplotlib, mpld3
 * (Under Development)
 
 ## Install

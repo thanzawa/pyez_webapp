@@ -10,6 +10,6 @@ PYEZ_TEMPLATES_DIR = PYEZ_FLASK_DIR + 'templates/'
 PYEZ_DEV_INFO_DIR = PYEZ_TEMPLATES_DIR + 'dev_info/'
 
 # Device user name and password
-user = 'user'
-password = 'password'
+user = 'lab'
+password = 'lab'
 

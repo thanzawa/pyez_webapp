@@ -6,3 +6,6 @@ more-itertools
 uwsgi
 networkx
 matplotlib
+
+mpld3
+numpy

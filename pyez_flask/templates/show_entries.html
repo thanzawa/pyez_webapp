@@ -16,7 +16,7 @@
     <div id="page-content-wrapper"><div class="container-fluid">
       <div class="row">
         <div class="col-lg-12">
-          <h1>Connect Junos Devices</h1>
+          <h1><span class="glyphicon glyphicon-search"></span> Connect Junos Devices</h1>
         </div>
       </div>
     </div>
@@ -28,26 +28,48 @@
 
   <form action="{{ url_for('collect_dev_info') }}" method=post class="add-entry">
   <div class="row">
-    <div class="col-lg-2"> 
+    <label for="start_addr" class="col-lg-2 control-label">Start IP Address</label> 
+    <div class="col-lg-4"> 
       <div class="form-group">
-        <input type=text class="form-control" size=20 name=start_addr placeholder="Start Address">
+        <input type=text class="form-control" id="start_addr" size=20 name=start_addr value={{ start_addr }} placeholder="Start Address">
       </div>
     </div>
   </div>
   <div class="row">
-    <div class="col-lg-2"> 
-    <div class="form-group">
-      <input type=text class="form-control"  name=end_addr placeholder="End Address">
+    <label for="end_addr" class="col-lg-2 control-label">End IP Address</label> 
+    <div class="col-lg-4"> 
+      <div class="form-group">
+        <input type=text class="form-control"  id="end_addr" name=end_addr value={{ end_addr }} placeholder="End Address">
+      </div>
     </div>
+  </div>
+  <div class="row">
+    <label for="user" class="col-lg-2 control-label">User Name</label> 
+    <div class="col-lg-4"> 
+      <div class="form-group">
+        <input type=text class="form-control"  id="user" name=user value={{ user }} >
+      </div>
     </div>
+  </div>
+  <div class="row">
+    <label for="password" class="col-lg-2 control-label">Password</label> 
+    <div class="col-lg-4"> 
+      <div class="form-group">
+        <input type=password class="form-control"  id="password" name=password value={{ password }} >
+      </div>
     </div>
-    <div class="row">
+  </div>
+  <div class="row">
     <div class="col-lg-2">
-    <input type=submit class="btn btn-primary btn-block"  value="Connect">
     </div>
+    <div class="col-lg-3">
+    <input type=submit name=button class="btn btn-default"  value="Search">
     </div>
+    <div class="col-lg-1">
+    <input type=submit name=button class="btn btn-success"  value="Connect">
+    </div>
+  </div>
   </form>
-  
   </div>
   </div>
 {% endblock %}

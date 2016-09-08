@@ -8,10 +8,16 @@ from pyez_flask.models import Entry, Dev
 from more_itertools import chunked
 from lxml import etree
 import networkx as nx
+import matplotlib.pyplot as plt
 import matplotlib.pylab as plt
 
+import numpy as np
+import mpld3
+from mpld3 import utils, plugins
+
+
 import sys,os
-import config
+import config, param
 import time
 import traceback
 import shutil
@@ -25,15 +31,33 @@ Device.auto_probe = 1
 
 
 
-def call_dev(ip_addr):
+def call_dev(ip_addr, user, password):
 
-  dev = Device(host=ip_addr, user=config.user, password=config.password)
+  dev = Device(host=ip_addr, user=user, password=password)
+  #dev = Device(host=ip_addr, user=config.user, password=config.password)
   
 
   return dev
-def get_device_information2(ip_addr):
 
-  dev = call_dev(ip_addr)
+def host_to_addr(ip_addr, user, password):
+  dev = call_dev(ip_addr, user, password)
+
+  try:
+    dev.open()
+  except:
+    return
+
+  dev_dict = dev.facts
+  filename = config.PYEZ_FLASK_DIR + 'host_addr.txt'
+  f = open(filename, 'a')
+  f.write(str(dev_dict.get('hostname')) + ',' + ip_addr + '\n')
+  f.close()
+  dev.close()
+
+
+def get_device_information2(ip_addr, user, password):
+
+  dev = call_dev(ip_addr, user, password)
   print ip_addr
   try:
     dev.open()
@@ -45,10 +69,12 @@ def get_device_information2(ip_addr):
 
   dev_dict = dev.facts
 
+  '''
   filename = config.PYEZ_FLASK_DIR + 'host_addr.txt'
   f = open(filename, 'a')
   f.write(str(dev_dict.get('hostname')) + ',' + ip_addr + '\n')
   f.close()
+  '''
 
   result = ''
   #result += '<th><input type="checkbox" name="check" value=' + ip_addr + '></th>'
@@ -71,7 +97,7 @@ def get_device_information2(ip_addr):
 
 
 def get_device_information(ip_addr):
-  dev = call_dev(ip_addr)
+  dev = call_dev(ip_addr, user, password)
    
   try:
     dev.open()
@@ -242,7 +268,7 @@ def create_lldp_table(dev, ip_addr, hostname):
     result += '</table>\n'
     
     if neighbors != []:
-      create_neighbors_fig(hostname, neighbors, ip_addr)
+      create_neighbors_fig_mpld3(hostname, neighbors, ip_addr)
       '''
       result += '<!-- '
       for neighbor in neighbors:
@@ -251,9 +277,15 @@ def create_lldp_table(dev, ip_addr, hostname):
       '''
   except EzErrors.RpcError:
     result += '<tr>\n<td colspan="3">lldp service is not runnning</td>\n</tr>\n</table>'
-
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
+  except EzErrors.ConnectClosedError:
+    result += '<tr>\n<td colspan="3">Connection unexpectedly closed</td>\n</tr>\n</table>'
     
-  #return result
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
+
+  #returr result
 
   f = open(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr, 'w')
   f.write(result)
@@ -296,8 +328,8 @@ def create_neighbors_fig(hostname, neighbors, ip_addr):
   pos = nx.spring_layout(G)
   #edge_labels = {(a, b):'5',(a, c):5, (a, d):5, (a, e):5, (a, f):5}
   
-  nx.draw_networkx_nodes(G, pos, nodelist=node_list1, node_size=500, node_color='r')
-  nx.draw_networkx_nodes(G, pos, nodelist=node_list2, node_size=500, node_color='#8fc5ff')
+  nx.draw_networkx_nodes(G, pos, node_size=500, node_color=colors)
+  #nx.draw_networkx_nodes(G, pos, nodelist=node_list2, node_size=500, node_color='#8fc5ff')
   #nx.draw_networkx_nodes(G, pos, node_size=500, node_color="#8fc5ff")
   nx.draw_networkx_edges(G, pos, width=1)
   #nx.draw_networkx_edge_labels(G, pos,edge_labels)
@@ -348,6 +380,55 @@ def create_neighbors_fig(hostname, neighbors, ip_addr):
   plt.savefig(config.PYEZ_FLASK_DIR + 'static/' + ip_addr + '.png')
   print "-----fig-----"
 '''  
+
+def create_addr_list2(start_addr, end_addr):
+  end_addr_split = end_addr.split('.')
+  
+  addr = start_addr
+
+  result = []
+  result.append(addr)
+  
+  if start_addr == end_addr:
+    f.close()
+    return
+  
+  while True:
+    
+    addr_split = addr.split('.')
+    addr_int = map(int, addr_split)
+
+    if addr_int[3] == 255 and addr_int[2] == 255 and addr_int[1] == 255 and addr_int[0] == 255:
+      break
+    elif addr_int[3] == 255 and addr_int[2] == 255 and addr_int[1] == 255 and addr_int[0] != 255:
+      addr_int[3] = 0
+      addr_int[2] = 0
+      addr_int[1] = 0
+      addr_int[0] += 1
+
+    elif addr_int[3] == 255 and addr_int[2] == 255 and addr_int[1] != 255:
+      addr_int[3] = 0
+      addr_int[2] = 0
+      addr_int[1] += 1
+
+    elif addr_int[3] == 255 and addr_int[2] != 255:
+      addr_int[3] = 0
+      addr_int[2] += 1
+    else:
+      addr_int[3] += 1
+
+    addr_str = map(str, addr_int)
+    addr = '.'.join(addr_str)
+    
+    result.append(addr)
+
+    if addr_str == end_addr_split:
+      break
+
+  return result
+  
+
+
 
 def create_addr_list(start_addr='192.168.1.1', end_addr='192.168.1.2'):
   end_addr_split = end_addr.split('.')
@@ -446,31 +527,110 @@ def get_ip_addr(hostname):
   result += hostname + '</td>\n'
   return result
 
-
-
-
-'''
-def get_neighbors(ip_addr):
-  f = open(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr, 'r')
-  read_neighbor = f.read().rstrip().split('\n')[-1]
-
-  if read_neighbor == '</table>':
-    f.close()
-    return None
-  else:
-    neighbors = read_neighbor.lstrip('<!-- ').rstrip(',  -->').split(',')
-    print '##########' + ','.join(neighbors)
-    f.close()
-    return neighbors
-'''
-
-'''
-def get_ip_addr(hostname):
+def get_ip_addr2(hostname):
   f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt', 'r')
   hosts = f.read().split('\n')
   for host in hosts:
     if hostname == host.split(',')[0]:
-      print host.split(',')[1].rstrip()
-      return host.split(',')[1].rstrip()
-  return '#' 
-'''
+      result = host.split(',')[1].rstrip()
+      return result
+
+  return 'javascript:void(0)'
+
+
+def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr):
+  
+
+  class ClickInfo(plugins.PluginBase):
+    """Plugin for getting info on click"""
+    
+    JAVASCRIPT = """
+    mpld3.register_plugin("clickinfo", ClickInfo);
+    ClickInfo.prototype = Object.create(mpld3.Plugin.prototype);
+    ClickInfo.prototype.constructor = ClickInfo;
+    ClickInfo.prototype.requiredProps = ["id", "urls"];
+    function ClickInfo(fig, props){
+        mpld3.Plugin.call(this, fig, props);
+    };
+    
+    ClickInfo.prototype.draw = function(){
+        var obj = mpld3.get_element(this.props.id);
+        urls = this.props.urls;
+        obj.elements().on("mousedown",
+                          function(d, i){window.location.href = urls[i];});
+    }
+    """
+    def __init__(self, points, urls):
+        self.dict_ = {"type": "clickinfo",
+                      "id": utils.get_id(points),
+                      "urls": urls}
+      
+  #nodes = []
+  #for neighbor in neighbors:
+  #  nodes.append(neighbor)
+  nodes = neighbors[:]
+  nodes.append(hostname)
+
+  #node_list1 = [hostname]
+  #node_list2 = neighbors[:]
+
+  G = nx.Graph()
+  G.add_nodes_from(nodes)
+  colors = []
+
+  #colors.append('r')
+  
+  #colors.append('#8fc5ff')
+  for neighbor in neighbors:
+    G.add_edge(hostname, neighbor)
+    #colors.append('#8fc5ff')
+  
+  pos = nx.spring_layout(G)
+  print pos
+  
+  host_addr = {}
+  host_addr_list = []
+  
+  for key, value in pos.iteritems():
+    host_addr_list.append(get_ip_addr2(key))
+
+    if key == hostname:
+      colors.append('r')
+    else:
+      colors.append('#8fc5ff')
+
+  print host_addr_list
+  
+  
+  fig, ax = plt.subplots(subplot_kw=dict(axisbg='#EEEEEE'))
+  ax.axis('off')
+  ax.xaxis.set_major_formatter(plt.NullFormatter())
+  ax.yaxis.set_major_formatter(plt.NullFormatter())
+
+  scatter = nx.draw_networkx_nodes(G, pos, node_size=2000, node_color=colors, ax=ax)
+  nx.draw_networkx_edges(G, pos, width=1, ax=ax)
+  
+  label_pos = {}
+  for key, value in pos.iteritems():
+    label_x = value[0]
+    label_y = value[1] #- 0.075
+
+    label_pos[key] = np.array([label_x, label_y])
+
+
+  
+  nx.draw_networkx_labels(G, label_pos ,font_size=16, font_color="#000000", ax=ax)
+  
+
+  plt.xticks([])
+  plt.yticks([])
+
+  plt.axis('off')
+  labels = G.nodes()
+  mpld3.plugins.connect(fig, ClickInfo(scatter, host_addr_list))
+  #mpld3.show()
+  
+  mpld3.save_html(fig, config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
+
+
+

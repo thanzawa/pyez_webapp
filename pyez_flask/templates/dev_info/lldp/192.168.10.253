@@ -1,0 +1,12 @@
+<table class="table table-striped">
+<tr>
+<th>Local Interface</th>
+<th>Remote Hostname</th>
+<th>Remote Interfaces</th>
+</tr>
+<tr>
+<td>ge-0/0/0.0</td>
+<td><a href="./192.168.10.254">switch1</td>
+<td>ge-0/0/2.0</td>
+</tr>
+</table>

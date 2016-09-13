@@ -34,7 +34,6 @@ Device.auto_probe = 1
 def call_dev(ip_addr, user, password):
 
   dev = Device(host=ip_addr, user=user, password=password)
-  #dev = Device(host=ip_addr, user=config.user, password=config.password)
   
 
   return dev
@@ -65,6 +64,16 @@ def get_device_information2(ip_addr, user, password):
     print 'could not connect'
     if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'facts/' + ip_addr):
       os.remove(config.PYEZ_DEV_INFO_DIR + 'facts/' + ip_addr)
+
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'vlans/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'vlans/' + ip_addr)
+
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr)
+
+    if os.path.isfilr(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
+
     return None
 
   dev_dict = dev.facts
@@ -223,6 +232,10 @@ def create_lldp_table(dev, ip_addr, hostname):
     root = etree.fromstring(rpc_response)
     entries = root.xpath('//lldp-neighbor-information')
     neighbors = []
+    
+    port_dict = {}
+    
+
 
     for entry in entries:
       lldp_dict = {}
@@ -260,21 +273,29 @@ def create_lldp_table(dev, ip_addr, hostname):
       result += str(get_ip_addr(lldp_dict.get('remote_host')))
       #result += '<td><a href="./' + str(get_ip_addr(lldp_dict.get('remote_host'))) + '">' + lldp_dict["remote_host"] + '</td>\n' 
       result += '<td>' + lldp_dict["remote_port"] + '</td>\n</tr>\n'
-  
+   
+     
+      if port_dict.get(str(lldp_dict.get("remote_host"))) is None:
+        port_dict[str(lldp_dict.get("remote_host"))] = [[lldp_dict.get("local_i"), lldp_dict.get("remote_port")]]
+      else:
+        port_dict[str(lldp_dict.get("remote_host"))].append([lldp_dict.get("local_i"), lldp_dict.get("remote_port")])
+      
+    
 
     if len(entries) == 0:
       result += '<tr>\n<td colspan="3">None</td>\n</tr>'
 
     result += '</table>\n'
-    
+    print "++++dict+++"
+    print port_dict
+  
+
     if neighbors != []:
-      create_neighbors_fig_mpld3(hostname, neighbors, ip_addr)
-      '''
-      result += '<!-- '
-      for neighbor in neighbors:
-        result += neighbor + ','
-      result += ' -->\n'
-      '''
+      create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict)
+    elif neighbors == [] and os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
+  
+  
   except EzErrors.RpcError:
     result += '<tr>\n<td colspan="3">lldp service is not runnning</td>\n</tr>\n</table>'
     if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
@@ -390,8 +411,7 @@ def create_addr_list2(start_addr, end_addr):
   result.append(addr)
   
   if start_addr == end_addr:
-    f.close()
-    return
+    return [start_addr]
   
   while True:
     
@@ -538,9 +558,8 @@ def get_ip_addr2(hostname):
   return 'javascript:void(0)'
 
 
-def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr):
+def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict):
   
-
   class ClickInfo(plugins.PluginBase):
     """Plugin for getting info on click"""
     
@@ -578,12 +597,9 @@ def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr):
   G.add_nodes_from(nodes)
   colors = []
 
-  #colors.append('r')
   
-  #colors.append('#8fc5ff')
   for neighbor in neighbors:
     G.add_edge(hostname, neighbor)
-    #colors.append('#8fc5ff')
   
   pos = nx.spring_layout(G)
   print pos
@@ -608,7 +624,7 @@ def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr):
   ax.yaxis.set_major_formatter(plt.NullFormatter())
 
   scatter = nx.draw_networkx_nodes(G, pos, node_size=2000, node_color=colors, ax=ax)
-  nx.draw_networkx_edges(G, pos, width=1, ax=ax)
+  line = nx.draw_networkx_edges(G, pos, width=7, ax=ax)
   
   label_pos = {}
   for key, value in pos.iteritems():
@@ -626,11 +642,44 @@ def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr):
   plt.yticks([])
 
   plt.axis('off')
-  labels = G.nodes()
+  #labels = G.nodes()
+
+  print 'pospospos'
+  print pos
+  labels = []
+  for key, value in pos.iteritems():
+    if key == hostname:
+      print key + "-" + hostname
+      continue 
+
+    table = '<table class="table">'
+    table += '<tr class="warning"><th colspan="2">Interface</th><tr>'
+    table += '<tr class="warning"><th>' + hostname + '</th><th>' + key + '</th></tr>'
+    print key
+    for array in port_dict[key]:
+      table += '<tr class="warning"><td>' + array[0] + '</td><td>' + array[1] + '</td></tr>'
+    table += "</table>"
+    labels.append(table)
+
+  #table = '''
+  #<table class="table table-condensed">
+  #<tr class="warning"><th colspan="2">Interface</th></tr>
+  #<tr class="warning"><td>SW1</td><td>SW2</td></tr>
+  #<tr class="warning"><td>ge-0/0/0</td><td>ge-0/0/1</td></tr>
+  #</table>
+  #'''
+  #labels=[]
+  #for i in neighbors:
+  #  labels.append(table)
+
+  tooltip = plugins.PointHTMLTooltip(line, labels=labels)
+  #tooltip = plugins.PointHTMLTooltip(line, labels=labels, css=css)
+
+  mpld3.plugins.connect(fig, tooltip)
   mpld3.plugins.connect(fig, ClickInfo(scatter, host_addr_list))
-  #mpld3.show()
   
-  mpld3.save_html(fig, config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
+  
+  mpld3.save_html(fig, config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr, d3_url='./static/d3.v3.min.js', mpld3_url='./static/mpld3.v0.2.js')
 
 
 

@@ -40,7 +40,12 @@ def show_entries():
 
 @app.route('/show_devices.html')
 def show_devices():
-  devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
+  f = open(config.PYEZ_FLASK_DIR + 'param.txt')
+  params = f.read().rstrip().split('\n')
+  start_addr = params[0].split(' ')[2]
+  end_addr = params[1].split(' ')[2]
+  devices_sub = pyez_func.create_addr_list2(start_addr, end_addr)
+  
   devices = []
   for device in devices_sub:
     filename = config.PYEZ_DEV_INFO_DIR + 'facts/' + device
@@ -83,7 +88,11 @@ def show_result():
 
 @app.route('/send_commands.html')
 def send_commands(conf_diff=''):
-  devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
+  f = open(config.PYEZ_FLASK_DIR + 'param.txt')
+  params = f.read().rstrip().split('\n')
+  start_addr = params[0].split(' ')[2]
+  end_addr = params[1].split(' ')[2]
+  devices_sub = pyez_func.create_addr_list2(start_addr, end_addr)
   
   devices = []
   for device in devices_sub:
@@ -102,7 +111,12 @@ def cmd_result():
   check_list = request.form.getlist('check')
   print check_list
   
-  devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
+  #devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
+  f = open(config.PYEZ_FLASK_DIR + 'param.txt')
+  params = f.read().rstrip().split('\n')
+  start_addr = params[0].split(' ')[2]
+  end_addr = params[1].split(' ')[2]
+  devices_sub = pyez_func.create_addr_list2(start_addr, end_addr)
   devices = []
   for device in devices_sub:
     filename = config.PYEZ_DEV_INFO_DIR + 'facts/' + device
@@ -131,7 +145,12 @@ def cmd_result():
 
 @app.route('/install_junos.html')
 def install_junos():
-  devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
+  #devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
+  f = open(config.PYEZ_FLASK_DIR + 'param.txt')
+  params = f.read().rstrip().split('\n')
+  start_addr = params[0].split(' ')[2]
+  end_addr = params[1].split(' ')[2]
+  devices_sub = pyez_func.create_addr_list2(start_addr, end_addr)
   
   devices = []
   for device in devices_sub:
@@ -150,7 +169,12 @@ def install_image():
   dev_list = request.form.getlist('file')
 
 
-  devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
+  #devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
+  f = open(config.PYEZ_FLASK_DIR + 'param.txt')
+  params = f.read().rstrip().split('\n')
+  start_addr = params[0].split(' ')[2]
+  end_addr = params[1].split(' ')[2]
+  devices_sub = pyez_func.create_addr_list2(start_addr, end_addr)
   
   devices = []
   for device in devices_sub:
@@ -231,10 +255,12 @@ def collect_dev_info():
     return render_template('show_entries.html', user=user, password=password, start_addr=start_addr, end_addr=end_addr)
     '''
 
+  if os.path.isfile(config.PYEZ_FLASK_DIR + 'host_addr.txt') == False:
+    return redirect(url_for('show_entries'))
 
 
-  f = open(config.PYEZ_FLASK_DIR + 'host_addr.py', 'w')
-  f.close()
+  #f = open(config.PYEZ_FLASK_DIR + 'host_addr.py', 'w')
+  #f.close()
 
 
   start_addr = request.form['start_addr']
@@ -263,7 +289,13 @@ def collect_dev_info():
  
   f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt', 'r')
   addr_list = f.read().rstrip().split('\n')
-
+  '''
+  f = open(config.PYEZ_FLASK_DIR + 'param.txt')
+  params = f.read().rstrip().split('\n')
+  start_addr = params[0].split(' ')[2]
+  end_addr = params[1].split(' ')[2]
+  addr_list = pyez_func.create_addr_list2(start_addr, end_addr)
+  '''
   
   for addr in addr_list:
     

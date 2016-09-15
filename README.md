@@ -7,6 +7,7 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 
 指定したアドレス範囲内でJunosデバイスを探索し、複数台のデバイスに対する設定の変更や情報の取得を行います。
 
+This application can search Junos Devices , change configuretions and show device informations.
 
 ## Features
 * デバイスとの接続と情報の取得
@@ -41,7 +42,7 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 
   Installing Python 2.6 or 2.7, and Junos PyEZ.
 
-  In detail, please refer to URL below.
+  For more information, please refer to URL below.
 
   <http://www.juniper.net/techpubs/en_US/junos-pyez1.0/topics/task/installation/junos-pyez-server-installing.html>
 

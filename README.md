@@ -26,11 +26,11 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 
 * Server
 
-Installing Python 2.6 or 2.7, and Junos PyEZ.
+  Installing Python 2.6 or 2.7, and Junos PyEZ.
 
-In detail, please refer to URL below.
+  In detail, please refer to URL below.
 
-<http://www.juniper.net/techpubs/en_US/junos-pyez1.0/topics/task/installation/junos-pyez-server-installing.html>
+  <http://www.juniper.net/techpubs/en_US/junos-pyez1.0/topics/task/installation/junos-pyez-server-installing.html>
 
 * Junos Devices
 

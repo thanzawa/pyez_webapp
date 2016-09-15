@@ -53,6 +53,10 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 
   <http://www.juniper.net/techpubs/en_US/junos-pyez1.0/topics/task/installation/junos-pyez-server-installing.html>
 
+  I developed and tested this application at Ubuntu 14.04 LTS 32bit. 
+
+  So, I reccomend the use of Ubuntu
+
 * Junos Devices
 
   Enable NETCONF and lldp

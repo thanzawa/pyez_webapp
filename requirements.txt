@@ -1,8 +1,8 @@
 Flask==0.10.1
 Flask-Bootstrap==3.3.6.0
 Flask-SQLAlchemy==2.1
-junos-eznc==1.4.0.dev0
-matplotlib==1.5.2
+junos-eznc==2.0.0
+matplotlib==1.5.3
 more-itertools==2.2
 mpld3==0.2
 networkx==1.11

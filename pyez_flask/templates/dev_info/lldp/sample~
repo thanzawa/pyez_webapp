@@ -1,0 +1,17 @@
+<table class="table table-striped">
+<tr>
+<th>Local Interface</th>
+<th>Remote Hostname</th>
+<th>Remote Interfaces</th>
+</tr>
+<tr>
+<td>ge-0/0/22</td>
+<td>EX3200-2</td>
+<td>ge-0/0/47.0</td>
+</tr>
+<tr>
+<td>ge-0/0/40</td>
+<td><a href="./172.27.113.126">mizuho</td>
+<td>ge-0/0/47</td>
+</tr>
+</table>

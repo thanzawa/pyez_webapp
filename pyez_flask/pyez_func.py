@@ -14,10 +14,8 @@ import matplotlib.pylab as plt
 import numpy as np
 import mpld3
 from mpld3 import utils, plugins
-
-
 import sys,os
-import config, param
+import config
 import time
 import traceback
 import shutil
@@ -40,10 +38,11 @@ def call_dev(ip_addr, user, password):
 
 def host_to_addr(ip_addr, user, password):
   dev = call_dev(ip_addr, user, password)
-
+  
   try:
     dev.open()
   except:
+    print ip_addr + "- not connected"
     return
 
   dev_dict = dev.facts
@@ -71,24 +70,20 @@ def get_device_information2(ip_addr, user, password):
     if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr):
       os.remove(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr)
 
-    if os.path.isfilr(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
       os.remove(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
 
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'hardware/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'hardware/' + ip_addr)
     return None
 
   dev_dict = dev.facts
 
-  '''
-  filename = config.PYEZ_FLASK_DIR + 'host_addr.txt'
-  f = open(filename, 'a')
-  f.write(str(dev_dict.get('hostname')) + ',' + ip_addr + '\n')
-  f.close()
-  '''
 
   result = ''
   #result += '<th><input type="checkbox" name="check" value=' + ip_addr + '></th>'
   result += '<th><a href="./' + ip_addr + '">' + ip_addr + '</a></th>'
-  result += '<th>' + str(dev_dict.get('hostname')) + '</th>'
+  result += '<th id="host">' + str(dev_dict.get('hostname')) + '</th>'
   result += '<th>' + str(dev_dict.get('model')) + '</th>'
   result += '<th>' + str(dev_dict.get('version')) + '</th>'
 
@@ -100,6 +95,7 @@ def get_device_information2(ip_addr, user, password):
 
 
   create_vlan_table(dev, ip_addr)
+  create_hardware_table(dev, ip_addr)
   create_lldp_table(dev, ip_addr, str(dev_dict.get('hostname')))
   dev.close()
 
@@ -219,8 +215,120 @@ def create_vlan_table(dev, ip_addr):
   f.write(result)
   f.close()
 
-  print 'VLAN table created' 
 
+def create_hardware_table(dev, ip_addr):
+  result = '<table class="table table-striped">\n<tr>\n<th>Item</th>\n<th>Version</th>\n<th>Part number</th>\n<th>Serial number</th>\n<th>Description</th>\n</tr>\n'
+
+  try:
+    rpc_response = etree.tostring(dev.rpc.get_chassis_inventory())
+  except:
+    return
+  
+  root = etree.fromstring(rpc_response)
+  entries = root.xpath('//chassis')
+
+  for entry in entries:
+    hard = {}
+
+    if entry.find('name') is not None:
+      hard['name'] = str(entry.find('name').text)
+    else:
+      hard['name'] = ""
+    if entry.find('version') is not None:
+      hard['version'] = str(entry.find('version').text)
+    else:
+      hard['version'] = ""
+    if entry.find('part-number') is not None:
+      hard['part-number'] = str(entry.find('part-number').text)
+    else:
+      hard['part-number'] = ""
+    if entry.find('serial-number') is not None:
+      hard['serial-number'] = str(entry.find('serial-number').text)
+    else:
+      hard['serial-number'] = ""
+    if entry.find('description') is not None:
+      hard['description'] = str(entry.find('description').text)
+    else:
+      hard['description'] = ""
+  
+    result += '<tr>\n<td>' + hard["name"] + '</td>\n'
+    result += '<td></td>\n'
+    result += '<td></td>\n'
+    result += '<td>' + hard["serial-number"] + '</td>\n' 
+    result += '<td>' + hard["description"] + '</td>\n</tr>\n'
+
+  entries = root.xpath('//chassis-module')
+  
+  for entry in entries:
+    hard = {}
+    if entry.find('name') is not None:
+      hard['name'] = str(entry.find('name').text)
+    else:
+      hard['name'] = ""
+    if entry.find('version') is not None:
+      hard['version'] = str(entry.find('version').text)
+    else:
+      hard['version'] = ""
+    if entry.find('part-number') is not None:
+      hard['part-number'] = str(entry.find('part-number').text)
+    else:
+      hard['part-number'] = ""
+    if entry.find('serial-number') is not None:
+      hard['serial-number'] = str(entry.find('serial-number').text)
+    else:
+      hard['serial-number'] = ""
+    if entry.find('description') is not None:
+      hard['description'] = str(entry.find('description').text)
+    else:
+      hard['description'] = ""
+  
+    result += '<tr>\n<td>' + hard["name"] + '</td>\n'
+    result += '<td>' + hard["version"] + '</td>\n'
+    result += '<td>' + hard["part-number"] + '</td>\n'
+    result += '<td>' + hard["serial-number"] + '</td>\n' 
+    result += '<td>' + hard["description"] + '</td>\n</tr>\n'
+    
+    if entry.find('chassis-sub-module') is not None:
+      sub_entry = entry.xpath('//chassis-sub-module')
+      
+      for entry in sub_entry:
+        hard = {}
+        if entry.find('name') is not None:
+          hard['name'] = str(entry.find('name').text)
+        else:
+          hard['name'] = ""
+         
+        if entry.find('version') is not None:
+          hard['version'] = str(entry.find('version').text)
+        else:
+          hard['version'] = ""
+
+        if entry.find('part-number') is not None:
+          hard['part-number'] = str(entry.find('part-number').text)
+        else:
+          hard['part-number'] = ""
+         
+        if entry.find('serial-number') is not None:
+          hard['serial-number'] = str(entry.find('serial-number').text)
+        else:
+          hard['serial-number'] = ""
+        
+        if entry.find('description') is not None:
+          hard['description'] = str(entry.find('description').text)
+        else:
+          hard['description'] = ""
+      
+        result += '<tr>\n<td>' + hard["name"] + '</td>\n'
+        result += '<td>' + hard["version"] + '</td>\n'
+        result += '<td>' + hard["part-number"] + '</td>\n'
+        result += '<td>' + hard["serial-number"] + '</td>\n' 
+        result += '<td>' + hard["description"] + '</td>\n</tr>\n'
+      
+  result += '</table>'
+
+  f = open(config.PYEZ_DEV_INFO_DIR + 'hardware/' + ip_addr, 'w')
+  f.write(result)
+  f.close()
 
 
 def create_lldp_table(dev, ip_addr, hostname):
@@ -235,8 +343,6 @@ def create_lldp_table(dev, ip_addr, hostname):
     
     port_dict = {}
     
-
-
     for entry in entries:
       lldp_dict = {}
       lldp_dict["local_i"] = ""
@@ -262,7 +368,6 @@ def create_lldp_table(dev, ip_addr, hostname):
         lldp_dict["remote_port"] = entry.find('lldp-remote-port-description').text
       elif entry.find('lldp-remote-port-id') is not None:
         lldp_dict["remote_port"] = entry.find('lldp-remote-port-id').text
-        #neighbors.append(entry.find('lldp-remote-port-id').text)
       elif entry.find('lldp-remote-chassis-id') is not None and entry.find('lldp-remote-chassis-id-subtype') is not None and entry.find('lldp-remote-chassis-id-subtype').text == 'Mac address':
         lldp_dict["remote_host"] = entry.find('lldp-remote-chassis-id').text
       else:
@@ -280,17 +385,14 @@ def create_lldp_table(dev, ip_addr, hostname):
       else:
         port_dict[str(lldp_dict.get("remote_host"))].append([lldp_dict.get("local_i"), lldp_dict.get("remote_port")])
       
-    
-
     if len(entries) == 0:
       result += '<tr>\n<td colspan="3">None</td>\n</tr>'
 
     result += '</table>\n'
-    print "++++dict+++"
-    print port_dict
-  
 
     if neighbors != []:
+      if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
+        os.remove(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
       create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict)
     elif neighbors == [] and os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
       os.remove(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
@@ -312,16 +414,12 @@ def create_lldp_table(dev, ip_addr, hostname):
   f.write(result)
   f.close()
 
-  #if len(entries) != 0:
-    #get_neighbors(ip_addr)
 
 
 def get_neighbors_fig(ip_addr):
-  #if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr + '.png') == True:
   if os.path.isfile(config.PYEZ_FLASK_DIR + 'static/' + ip_addr + '.png') == True:
 
     return [ip_addr + '.png']
-    #return [config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr + '.png']
   else:
     return []
 
@@ -343,64 +441,17 @@ def create_neighbors_fig(hostname, neighbors, ip_addr):
     G.add_edge(hostname, neighbor)
     colors.append('#8fc5ff')
   
-  print colors
 
-  #pos = nx.circular_layout(G)
   pos = nx.spring_layout(G)
-  #edge_labels = {(a, b):'5',(a, c):5, (a, d):5, (a, e):5, (a, f):5}
   
   nx.draw_networkx_nodes(G, pos, node_size=500, node_color=colors)
-  #nx.draw_networkx_nodes(G, pos, nodelist=node_list2, node_size=500, node_color='#8fc5ff')
-  #nx.draw_networkx_nodes(G, pos, node_size=500, node_color="#8fc5ff")
   nx.draw_networkx_edges(G, pos, width=1)
-  #nx.draw_networkx_edge_labels(G, pos,edge_labels)
   nx.draw_networkx_labels(G, pos ,font_size=16, font_color="#000000")
-  #nx.draw_networkx_labels(G, pos ,font_size=16, font_color="#ff1500")
   
   plt.xticks([])
   plt.yticks([])
   plt.savefig(config.PYEZ_FLASK_DIR + 'static/' + ip_addr + '.png')
-  print "-----fig-----"
 
-
-
-'''
-def create_neighbors_fig(hostname, neighbors, ip_addr):
-  nodes = []
-  for neighbor in neighbors:
-    nodes.append(neighbor)
-
-  nodes.append(hostname)
-
-  G = nx.Graph()
-  #G.add_node(hostname)
-  #G.add_nodes_from(nodes)
-  G.add_nodes_from(nodes)
-  #G.add_nodes_from(neighbors)
-  colors = []
-  
-  colors.append('r')
-  for neighbor in neighbors:
-    G.add_edge(hostname, neighbor)
-    colors.append('#8fc5ff')
-  
-  print colors
-
-  pos = nx.spring_layout(G)
-  #edge_labels = {(a, b):'5',(a, c):5, (a, d):5, (a, e):5, (a, f):5}
-  
-  nx.draw_networkx_nodes(G, pos, node_size=500, node_color=colors)
-  #nx.draw_networkx_nodes(G, pos, node_size=500, node_color="#8fc5ff")
-  nx.draw_networkx_edges(G, pos, width=1)
-  #nx.draw_networkx_edge_labels(G, pos,edge_labels)
-  nx.draw_networkx_labels(G, pos ,font_size=16, font_color="#000000")
-  #nx.draw_networkx_labels(G, pos ,font_size=16, font_color="#ff1500")
-  
-  plt.xticks([])
-  plt.yticks([])
-  plt.savefig(config.PYEZ_FLASK_DIR + 'static/' + ip_addr + '.png')
-  print "-----fig-----"
-'''  
 
 def create_addr_list2(start_addr, end_addr):
   end_addr_split = end_addr.split('.')
@@ -447,8 +498,6 @@ def create_addr_list2(start_addr, end_addr):
 
   return result
   
-
-
 
 def create_addr_list(start_addr='192.168.1.1', end_addr='192.168.1.2'):
   end_addr_split = end_addr.split('.')
@@ -560,6 +609,28 @@ def get_ip_addr2(hostname):
 
 def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict):
   
+  css = """
+  table.ta1
+  {
+    border-collapse: collapse;
+  }
+  th.ta1
+  {
+    color: #ffffff;
+    background-color: #000000;
+  }
+  td.ta1
+  {
+    background-color: #cccccc;
+  }
+  table.ta1, th.ta1, td.ta1
+  {
+    font-family:Arial, Helvetica, sans-serif;
+    border: 1px solid black;
+    text-align: middle;
+  }
+  """
+
   class ClickInfo(plugins.PluginBase):
     """Plugin for getting info on click"""
     
@@ -584,14 +655,9 @@ def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict):
                       "id": utils.get_id(points),
                       "urls": urls}
       
-  #nodes = []
-  #for neighbor in neighbors:
-  #  nodes.append(neighbor)
   nodes = neighbors[:]
   nodes.append(hostname)
 
-  #node_list1 = [hostname]
-  #node_list2 = neighbors[:]
 
   G = nx.Graph()
   G.add_nodes_from(nodes)
@@ -602,7 +668,6 @@ def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict):
     G.add_edge(hostname, neighbor)
   
   pos = nx.spring_layout(G)
-  print pos
   
   host_addr = {}
   host_addr_list = []
@@ -615,21 +680,19 @@ def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict):
     else:
       colors.append('#8fc5ff')
 
-  print host_addr_list
-  
   
   fig, ax = plt.subplots(subplot_kw=dict(axisbg='#EEEEEE'))
   ax.axis('off')
   ax.xaxis.set_major_formatter(plt.NullFormatter())
   ax.yaxis.set_major_formatter(plt.NullFormatter())
 
-  scatter = nx.draw_networkx_nodes(G, pos, node_size=2000, node_color=colors, ax=ax)
+  scatter = nx.draw_networkx_nodes(G, pos, node_size=3000, node_shape='s', node_color=colors, ax=ax)
   line = nx.draw_networkx_edges(G, pos, width=7, ax=ax)
   
   label_pos = {}
   for key, value in pos.iteritems():
     label_x = value[0]
-    label_y = value[1] #- 0.075
+    label_y = value[1] 
 
     label_pos[key] = np.array([label_x, label_y])
 
@@ -642,44 +705,35 @@ def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict):
   plt.yticks([])
 
   plt.axis('off')
-  #labels = G.nodes()
 
-  print 'pospospos'
-  print pos
   labels = []
   for key, value in pos.iteritems():
     if key == hostname:
-      print key + "-" + hostname
       continue 
-
-    table = '<table class="table">'
-    table += '<tr class="warning"><th colspan="2">Interface</th><tr>'
-    table += '<tr class="warning"><th>' + hostname + '</th><th>' + key + '</th></tr>'
-    print key
+    '''
+    table = '<table class="ta1" border="1">'
+    #table += '<tr class="ta1"><th class="ta1" colspan="2">Interface</th></tr>'
+    table += '<tr class="ta1"><th class="ta1">' + hostname + '</th><th class="ta1">' + key + '</th></tr>'
     for array in port_dict[key]:
-      table += '<tr class="warning"><td>' + array[0] + '</td><td>' + array[1] + '</td></tr>'
+      table += '<tr class="ta1"><td class="ta1">' + array[0] + '</td><td class="ta1">' + array[1] + '</td></tr>'
     table += "</table>"
+    '''
+    table = '<table class="table table-bordered">'
+    #table += '<tr class="ta1"><th class="ta1" colspan="2">Interface</th></tr>'
+    table += '<tr class="active"><th>' + hostname + '</th><th>' + key + '</th></tr>'
+    for array in port_dict[key]:
+      table += '<tr class="active"><td>' + array[0] + '</td><td>' + array[1] + '</td></tr>'
+    table += "</table>"
+    
     labels.append(table)
 
-  #table = '''
-  #<table class="table table-condensed">
-  #<tr class="warning"><th colspan="2">Interface</th></tr>
-  #<tr class="warning"><td>SW1</td><td>SW2</td></tr>
-  #<tr class="warning"><td>ge-0/0/0</td><td>ge-0/0/1</td></tr>
-  #</table>
-  #'''
-  #labels=[]
-  #for i in neighbors:
-  #  labels.append(table)
 
-  tooltip = plugins.PointHTMLTooltip(line, labels=labels)
-  #tooltip = plugins.PointHTMLTooltip(line, labels=labels, css=css)
+  tooltip = plugins.PointHTMLTooltip(line, labels=labels, css=css)
 
   mpld3.plugins.connect(fig, tooltip)
   mpld3.plugins.connect(fig, ClickInfo(scatter, host_addr_list))
   
   
   mpld3.save_html(fig, config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr, d3_url='./static/d3.v3.min.js', mpld3_url='./static/mpld3.v0.2.js')
-
 
 

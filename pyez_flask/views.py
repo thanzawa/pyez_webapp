@@ -10,13 +10,13 @@ from pyez_flask.models import Entry, Dev
 from xml.sax.saxutils import *
 from jinja2 import Environment
 import pyez_func
-import config, param
+import config
 import threading
 import multiprocessing
 import time
 import os
 import traceback
-
+import bs4
 
 
 @app.route('/')
@@ -28,12 +28,6 @@ def show_entries():
   end_addr = params[1].split(' ')[2]
   user = params[2].split(' ')[2]
   password = params[3].split(' ')[2]
-  '''
-  user = param.user
-  password = param.password
-  start_addr = param.start_addr
-  end_addr = param.end_addr
-  '''
   
   return render_template('show_entries.html', user=user, password=password, start_addr=start_addr, end_addr=end_addr)
 
@@ -49,20 +43,35 @@ def show_devices():
   devices = []
   for device in devices_sub:
     filename = config.PYEZ_DEV_INFO_DIR + 'facts/' + device
-    print filename
 
-    print os.path.exists(filename)
     if os.path.exists(filename):
       devices.append(device)
 
-  print devices
   query_count= len(devices)
   return render_template('show_devices.html', devices=devices, query_count=query_count)
 
 
 @app.route('/<ip_addr>')
 def show_detailed_info(ip_addr):
-  return render_template('detailed_info.html', ip_addr=ip_addr)
+  '''
+  f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt')
+  host_addr_list = f.read().rstrip().split('\n')
+  '''
+  hostname = ""
+  try:
+    f = open(config.PYEZ_DEV_INFO_DIR + 'facts/' + ip_addr)
+    html = f.read()
+    soup = bs4.BeautifulSoup(html, "lxml")
+    hostname = ' - ' + soup.find(id="host").text + ' - '
+  except:
+    hostname = ""
+  '''
+  for host in host_addr_list:
+    if ip_addr == host.split(',')[1]:
+      hostname = "(" + host.split(',')[0] +  ")"
+  f.close()
+  '''
+  return render_template('detailed_info.html', ip_addr=ip_addr, hostname=hostname)
 
 @app.route('/show_result', methods=['POST'])
 def show_result():
@@ -84,6 +93,8 @@ def show_result():
       files.append('dev_info/lldp/' + ip_addr)
     return render_template('show_lldp_table.html', files=check_list)
 
+  elif command == 'show_hardware_information':
+    return render_template('show_hardware_information.html', files=check_list)
 
 
 @app.route('/send_commands.html')
@@ -109,9 +120,7 @@ def send_commands(conf_diff=''):
 def cmd_result():
   env = Environment(cache_size=0)
   check_list = request.form.getlist('check')
-  print check_list
   
-  #devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
   f = open(config.PYEZ_FLASK_DIR + 'param.txt')
   params = f.read().rstrip().split('\n')
   start_addr = params[0].split(' ')[2]
@@ -145,7 +154,6 @@ def cmd_result():
 
 @app.route('/install_junos.html')
 def install_junos():
-  #devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
   f = open(config.PYEZ_FLASK_DIR + 'param.txt')
   params = f.read().rstrip().split('\n')
   start_addr = params[0].split(' ')[2]
@@ -169,7 +177,6 @@ def install_image():
   dev_list = request.form.getlist('file')
 
 
-  #devices_sub = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r').read().rstrip().split('\n')
   f = open(config.PYEZ_FLASK_DIR + 'param.txt')
   params = f.read().rstrip().split('\n')
   start_addr = params[0].split(' ')[2]
@@ -220,7 +227,6 @@ def collect_dev_info():
   
 
   if request.form['button'] == 'Search':
-    print '---set---'
     f = open(config.PYEZ_FLASK_DIR + 'param.txt', 'w')
     
   
@@ -235,32 +241,40 @@ def collect_dev_info():
 
     if os.path.isfile(config.PYEZ_FLASK_DIR + 'host_addr.txt'):
       os.remove(config.PYEZ_FLASK_DIR + 'host_addr.txt')
-
+    
     addr_list = pyez_func.create_addr_list2(start_addr, end_addr)
-    print addr_list
-
+    
     for addr in addr_list:
       mp = multiprocessing.Process(target=pyez_func.host_to_addr, args=(addr, user, password))
       mp.start()
+    '''
+    host_addr_list = []
+    queue = multiprocessing.Queue()
+
+    addr_list = pyez_func.create_addr_list2(start_addr, end_addr)
     
+    for addr in addr_list:
+      mp = multiprocessing.Process(target=host_to_addr, args=(addr, user, password, queue))
+      mp.start()
+
+
+
+    #for addr in addr_list:
+    while not queue.empty():
+      host_addr_list.append(queue.get())
+
+    result = '\n'.join(host_addr_list)
+    print result
+
+    f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt', 'w')
+    f.write(result)
+    f.close()
+    '''
 
     return redirect(url_for('show_entries'))
-    '''
-    user = param.user
-    password = param.password
-    start_addr = param.start_addr
-    end_addr = param.end_addr
-
-  
-    return render_template('show_entries.html', user=user, password=password, start_addr=start_addr, end_addr=end_addr)
-    '''
 
   if os.path.isfile(config.PYEZ_FLASK_DIR + 'host_addr.txt') == False:
     return redirect(url_for('show_entries'))
-
-
-  #f = open(config.PYEZ_FLASK_DIR + 'host_addr.py', 'w')
-  #f.close()
 
 
   start_addr = request.form['start_addr']
@@ -273,32 +287,14 @@ def collect_dev_info():
   Dev.query.delete()
   db.session.commit()
 
-  '''
-  pyez_func.create_addr_list(start_addr, end_addr)
-
-  f = open(config.PYEZ_FLASK_DIR + 'addr_list.txt', 'r')
-  addr_list = f.read().rstrip().split('\n')
-  '''
-
-  #print addr_list
-  #print len(addr_list)
-  #q = multiprocessing.Queue()
-  #q.put(addr_list)
-
   start = time.time()
  
   f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt', 'r')
   addr_list = f.read().rstrip().split('\n')
-  '''
-  f = open(config.PYEZ_FLASK_DIR + 'param.txt')
-  params = f.read().rstrip().split('\n')
-  start_addr = params[0].split(' ')[2]
-  end_addr = params[1].split(' ')[2]
-  addr_list = pyez_func.create_addr_list2(start_addr, end_addr)
-  '''
-  
+  print addr_list
+
   for addr in addr_list:
-    
+ 
     mp = multiprocessing.Process(target=pyez_func.get_device_information2, args=(addr.split(',')[1], user, password))
     mp.start()
    
@@ -310,13 +306,20 @@ def send_cmd(ip_addr, cmds, queue):
   if cmds == []:
     return 
 
-  dev = pyez_func.call_dev(ip_addr)
+  f = open(config.PYEZ_FLASK_DIR + 'param.txt')
+  params = f.read().rstrip().split('\n')
+
+  start_addr = params[0].split(' ')[2]
+  end_addr = params[1].split(' ')[2]
+  user = params[2].split(' ')[2]
+  password = params[3].split(' ')[2]
+  
+  dev = pyez_func.call_dev(ip_addr, user, password)
   
   try:
     dev.open(gather_facts=False)
 
   except:
-    print 'could not connect'
     return 'could not connect' 
  
   cfg = Config(dev)
@@ -327,17 +330,45 @@ def send_cmd(ip_addr, cmds, queue):
     for cmd in cmds:
       cmd_sub = cmd.rstrip()
       cfg.load(cmd_sub, format="set")
-      #cfg.commit(timeput=int(60))
 
     result = cfg.diff()
     cfg.commit()
     print 'commit'
+    queue.put(device_addr + result)
   except:
     print 'error'
-    queue.put(device_addr + '\n' + str(traceback.format_exc(sys.exc_info()[2])))
+    queue.put(device_addr + '\n' + 'unknown command')
 
   finally:
     cfg.unlock()
 
-  queue.put(device_addr + result)
+  return
+
+
+def host_to_addr(ip_addr, user, password, queue):
+  dev = pyez_func.call_dev(ip_addr, user, password)
+
+  try:
+    dev.open()
+  except:
+
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'facts/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'facts/' + ip_addr)
+
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'vlans/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'vlans/' + ip_addr)
+
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr)
+
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
+
+    if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'hardware/' + ip_addr):
+      os.remove(config.PYEZ_DEV_INFO_DIR + 'hardware/' + ip_addr)
+    return
+  
+  dev_dict = dev.facts
+
+  queue.put(str(dev_dict.get('hostname')) + ',' + ip_addr)
   return

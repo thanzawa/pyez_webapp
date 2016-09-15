@@ -16,7 +16,7 @@
     <div id="page-content-wrapper"><div class="container-fluid">
       <div class="row">
         <div class="col-lg-12">
-          <h1><span class="glyphicon glyphicon-info-sign"></span> {{ ip_addr }}</h1>
+          <h1><span class="glyphicon glyphicon-info-sign"></span> {{ ip_addr }} {{ hostname }}</h1>
         </div>
       </div>
     </div>
@@ -56,6 +56,16 @@
   <div class="col-lg-12"> 
     <div class="panel panel-primary">
     	<div class="panel-heading">
+        <big>LLDP</big>	
+    	</div>
+      {% include '/dev_info/fig/' + ip_addr ignore missing %}
+      {% include '/dev_info/lldp/' + ip_addr ignore missing %}
+    </div>
+  </div>
+  
+  <div class="col-lg-12"> 
+    <div class="panel panel-primary">
+    	<div class="panel-heading">
         <big>VLAN</big>	
     	</div>
       {% include ['/dev_info/vlans/' + ip_addr, 'error.html'] ignore missing %}
@@ -66,10 +76,9 @@
   <div class="col-lg-12"> 
     <div class="panel panel-primary">
     	<div class="panel-heading">
-        <big>LLDP</big>	
+        <big>Hardware information</big>	
     	</div>
-      {% include '/dev_info/fig/' + ip_addr ignore missing %}
-      {% include '/dev_info/lldp/' + ip_addr ignore missing %}
+      {% include ['/dev_info/hardware/' + ip_addr, 'error.html'] ignore missing %}
     </div>
   </div>
 

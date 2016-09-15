@@ -1,0 +1,58 @@
+<table class="table table-striped">
+<tr>
+<th>Item</th>
+<th>Version</th>
+<th>Part number</th>
+<th>Serial number</th>
+<th>Description</th>
+</tr>
+<tr>
+<td>Chassis</td>
+<td></td>
+<td></td>
+<td>GR0212495706</td>
+<td>EX2200-C-12P-2G, POE+</td>
+</tr>
+<tr>
+<td>Routing Engine 0</td>
+<td>REV 07</td>
+<td>650-036547</td>
+<td>GR0212495706</td>
+<td>EX2200-C-12P-2G, POE+</td>
+</tr>
+<tr>
+<td>FPC 0</td>
+<td>REV 07</td>
+<td>650-036547</td>
+<td>GR0212495706</td>
+<td>EX2200-C-12P-2G, POE+</td>
+</tr>
+<tr>
+<td>CPU</td>
+<td></td>
+<td>BUILTIN</td>
+<td>BUILTIN</td>
+<td>FPC CPU</td>
+</tr>
+<tr>
+<td>PIC 0</td>
+<td></td>
+<td>BUILTIN</td>
+<td>BUILTIN</td>
+<td>12x 10/100/1000 Base-T</td>
+</tr>
+<tr>
+<td>PIC 1</td>
+<td>REV 07</td>
+<td>650-036547</td>
+<td>GR0212495706</td>
+<td>2x (10/100/1000 Base-T or GE SFP)</td>
+</tr>
+<tr>
+<td>Power Supply 0</td>
+<td></td>
+<td></td>
+<td></td>
+<td>PS 180W AC</td>
+</tr>
+</table>

@@ -1,5 +1,0 @@
-start_addr = 192.168.1.1
-end_addr = 192.168.1.2
-user = lab
-password = lab
-

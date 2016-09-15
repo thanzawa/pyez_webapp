@@ -8,3 +8,5 @@ mpld3==0.2
 networkx==1.11
 numpy==1.11.1
 uWSGI==2.0.13.1
+beautifulsoup4==4.5.1
+

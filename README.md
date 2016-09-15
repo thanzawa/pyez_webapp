@@ -22,6 +22,19 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 * Visualization of network topology using PyEZ, NetworkX, Matplotlib, mpld3
 * (Under Development)
 
+## Requirements
+
+* Server
+
+Installing Python 2.6 or 2.7, and Junos PyEZ.
+
+In detail, please refer to URL below.
+
+<http://www.juniper.net/techpubs/en_US/junos-pyez1.0/topics/task/installation/junos-pyez-server-installing.html>
+
+* Junos Devices
+
+
 ## Install
 
 `pip install -r requirements.txt`

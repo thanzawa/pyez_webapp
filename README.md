@@ -16,7 +16,10 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 * （今後、その他の機能を追加予定）
 
 
-* Connect to Junos devices and collect device informations
+* Connect to Junos devices and collect device informations 
+  
+  ![sample](https://github.com/thanzawa/figures/blob/master/pyez_webapp/connect.PNG "sample")
+
 * Show device informations at selected devices
 * Change configurations at selected devices
 * Visualization of network topology using PyEZ, NetworkX, Matplotlib, mpld3
@@ -50,6 +53,8 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 * Run
 
   `python app.py`
+  
+  You can access to "http://127.0.0.1:5000"
 
 
 

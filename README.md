@@ -36,6 +36,8 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 
 * Visualization of network topology using PyEZ, NetworkX, Matplotlib, mpld3
 
+  ![topology](https://github.com/thanzawa/figures/blob/master/pyez_webapp/topology.PNG "topology")
+  
   ![info](https://github.com/thanzawa/figures/blob/master/pyez_webapp/detailed_info.PNG "detailed_info")
 
 

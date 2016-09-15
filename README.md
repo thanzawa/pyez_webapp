@@ -33,17 +33,22 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
   <http://www.juniper.net/techpubs/en_US/junos-pyez1.0/topics/task/installation/junos-pyez-server-installing.html>
 
 * Junos Devices
+  Enable NETCONF and lldp
 
+  `set system services netconf ssh`
+
+  `set system services lldp interface all`
 
 ## Install
 
-`pip install -r requirements.txt`
+* Install libraries
 
-で必要なライブラリ等をインストールし
+  `pip install -r requirements.txt`
 
-`python app.py`
 
-でサーバを起動
+* Run
+
+  `python app.py`
 
 
 

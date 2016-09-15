@@ -5,7 +5,7 @@
 ## Overview
 
 
-This application can search Junos Devices , change configuretions and show device informations.
+This application can search Junos Devices , change configuretions and show device informations about multi devices.
 
 
 Juniper PyEZを用いたWebアプリケーションを実装しています。

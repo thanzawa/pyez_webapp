@@ -734,6 +734,6 @@ def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict):
   mpld3.plugins.connect(fig, ClickInfo(scatter, host_addr_list))
   
   
-  mpld3.save_html(fig, config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr, d3_url='./static/d3.v3.min', mpld3_url='./static/mpld3.v0.2')
+  mpld3.save_html(fig, config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr, d3_url='./static/d3.v3.min.js', mpld3_url='./static/mpld3.v0.2.js')
 
 

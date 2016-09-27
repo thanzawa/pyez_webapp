@@ -19,7 +19,6 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 * 任意のデバイスの情報の表示
 * 設定情報の一括変更
 * 取得情報を基にしたトポロジの可視化
-* （今後、その他の機能を追加予定）
 
 
 * Connect to Junos devices and collect device informations 
@@ -41,7 +40,6 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
   ![info](https://github.com/thanzawa/figures/blob/master/pyez_webapp/detailed_info.PNG "detailed_info")
 
 
-* (Under Development)
 
 ## Requirements
 

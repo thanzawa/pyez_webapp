@@ -63,7 +63,7 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 
   `set system services netconf ssh`
 
-  `set system services lldp interface all`
+  `set protocols lldp interface all`
 
 ## Install
 

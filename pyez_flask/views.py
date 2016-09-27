@@ -53,10 +53,7 @@ def show_devices():
 
 @app.route('/<ip_addr>')
 def show_detailed_info(ip_addr):
-  '''
-  f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt')
-  host_addr_list = f.read().rstrip().split('\n')
-  '''
+  
   hostname = ""
   try:
     f = open(config.PYEZ_DEV_INFO_DIR + 'facts/' + ip_addr)
@@ -65,12 +62,7 @@ def show_detailed_info(ip_addr):
     hostname = ' - ' + soup.find(id="host").text + ' - '
   except:
     hostname = ""
-  '''
-  for host in host_addr_list:
-    if ip_addr == host.split(',')[1]:
-      hostname = "(" + host.split(',')[0] +  ")"
-  f.close()
-  '''
+  
   return render_template('detailed_info.html', ip_addr=ip_addr, hostname=hostname)
 
 @app.route('/show_result', methods=['POST'])
@@ -201,8 +193,8 @@ def set_param():
   
   start_addr = request.form['start_addr']
   end_addr = request.form['end_addr']
-  user = 'lab'
-  password = 'lab'
+  user = request.form['user'] 
+  password = request.form['password']
   
 
   result = '' 
@@ -223,13 +215,10 @@ def collect_dev_info():
   end_addr = request.form['end_addr']
   user = request.form['user']
   password = request.form['password']
- 
-  
 
   if request.form['button'] == 'Search':
     f = open(config.PYEZ_FLASK_DIR + 'param.txt', 'w')
     
-  
     result = '' 
     result += 'start_addr = ' + start_addr + '\n'
     result += 'end_addr = ' + end_addr + '\n'
@@ -247,29 +236,6 @@ def collect_dev_info():
     for addr in addr_list:
       mp = multiprocessing.Process(target=pyez_func.host_to_addr, args=(addr, user, password))
       mp.start()
-    '''
-    host_addr_list = []
-    queue = multiprocessing.Queue()
-
-    addr_list = pyez_func.create_addr_list2(start_addr, end_addr)
-    
-    for addr in addr_list:
-      mp = multiprocessing.Process(target=host_to_addr, args=(addr, user, password, queue))
-      mp.start()
-
-
-
-    #for addr in addr_list:
-    while not queue.empty():
-      host_addr_list.append(queue.get())
-
-    result = '\n'.join(host_addr_list)
-    print result
-
-    f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt', 'w')
-    f.write(result)
-    f.close()
-    '''
 
     return redirect(url_for('show_entries'))
 
@@ -281,6 +247,7 @@ def collect_dev_info():
   end_addr = request.form['end_addr']
   user = request.form['user'] 
   password = request.form['password']
+  
   if pyez_func.check_addr_range(start_addr, end_addr) == False:
     return redirect(url_for('show_entries'))
 
@@ -291,10 +258,8 @@ def collect_dev_info():
  
   f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt', 'r')
   addr_list = f.read().rstrip().split('\n')
-  print addr_list
 
-  for addr in addr_list:
- 
+  for addr in addr_list: 
     mp = multiprocessing.Process(target=pyez_func.get_device_information2, args=(addr.split(',')[1], user, password))
     mp.start()
    
@@ -372,3 +337,5 @@ def host_to_addr(ip_addr, user, password, queue):
 
   queue.put(str(dev_dict.get('hostname')) + ',' + ip_addr)
   return
+
+

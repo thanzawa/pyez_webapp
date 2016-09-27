@@ -10,8 +10,7 @@ from lxml import etree
 import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib.pylab as plt
-
-import numpy as np
+from numpy import array
 import mpld3
 from mpld3 import utils, plugins
 import sys,os
@@ -19,32 +18,28 @@ import config
 import time
 import traceback
 import shutil
-
-
+from bs4 import BeautifulSoup
 
 Device.auto_probe = 1 
-#Device.timeout = 1
-#gather_facts
-
-
-
 
 def call_dev(ip_addr, user, password):
 
   dev = Device(host=ip_addr, user=user, password=password)
-  
 
   return dev
 
 def host_to_addr(ip_addr, user, password):
+
   dev = call_dev(ip_addr, user, password)
   
   try:
     dev.open()
   except:
     print ip_addr + "- not connected"
+    delete_info_files(ip_addr)
     return
 
+  delete_info_files(ip_addr)
   dev_dict = dev.facts
   filename = config.PYEZ_FLASK_DIR + 'host_addr.txt'
   f = open(filename, 'a')
@@ -56,7 +51,6 @@ def host_to_addr(ip_addr, user, password):
 def get_device_information2(ip_addr, user, password):
 
   dev = call_dev(ip_addr, user, password)
-  print ip_addr
   try:
     dev.open()
   except:
@@ -76,12 +70,10 @@ def get_device_information2(ip_addr, user, password):
     if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'hardware/' + ip_addr):
       os.remove(config.PYEZ_DEV_INFO_DIR + 'hardware/' + ip_addr)
     return None
-
   dev_dict = dev.facts
 
 
   result = ''
-  #result += '<th><input type="checkbox" name="check" value=' + ip_addr + '></th>'
   result += '<th><a href="./' + ip_addr + '">' + ip_addr + '</a></th>'
   result += '<th id="host">' + str(dev_dict.get('hostname')) + '</th>'
   result += '<th>' + str(dev_dict.get('model')) + '</th>'
@@ -98,7 +90,7 @@ def get_device_information2(ip_addr, user, password):
   create_hardware_table(dev, ip_addr)
   create_lldp_table(dev, ip_addr, str(dev_dict.get('hostname')))
   dev.close()
-
+  
 
 
 def get_device_information(ip_addr):
@@ -108,7 +100,6 @@ def get_device_information(ip_addr):
     dev.open()
 
   except:
-    print 'could not connect'
     return None
   
   dev_dict = dev.facts
@@ -154,8 +145,6 @@ def get_register_dev(ip_addr):
 
   if dev_dict != None:
     register_dev(dev_dict, ip_addr)
-
-
 
 
 def get_vlans_xml(dev, ip_addr, filename):
@@ -373,11 +362,9 @@ def create_lldp_table(dev, ip_addr, hostname):
       else:
         lldp_dict["remote_port"] = ""
       
-      print lldp_dict.get("remote_host")
-      result += '<tr>\n<td>' + lldp_dict["local_i"] + '</td>\n'
+      result += '<tr class="' + lldp_dict["remote_host"] + '">\n<td class="local_i">' + lldp_dict["local_i"] + '</td>\n'
       result += str(get_ip_addr(lldp_dict.get('remote_host')))
-      #result += '<td><a href="./' + str(get_ip_addr(lldp_dict.get('remote_host'))) + '">' + lldp_dict["remote_host"] + '</td>\n' 
-      result += '<td>' + lldp_dict["remote_port"] + '</td>\n</tr>\n'
+      result += '<td class="remote_port">' + lldp_dict["remote_port"] + '</td>\n</tr>\n'
    
      
       if port_dict.get(str(lldp_dict.get("remote_host"))) is None:
@@ -385,8 +372,10 @@ def create_lldp_table(dev, ip_addr, hostname):
       else:
         port_dict[str(lldp_dict.get("remote_host"))].append([lldp_dict.get("local_i"), lldp_dict.get("remote_port")])
       
+
     if len(entries) == 0:
       result += '<tr>\n<td colspan="3">None</td>\n</tr>'
+
 
     result += '</table>\n'
 
@@ -407,8 +396,6 @@ def create_lldp_table(dev, ip_addr, hostname):
     
     if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
       os.remove(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
-
-  #returr result
 
   f = open(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr, 'w')
   f.write(result)
@@ -443,7 +430,7 @@ def create_neighbors_fig(hostname, neighbors, ip_addr):
   
 
   pos = nx.spring_layout(G)
-  
+   
   nx.draw_networkx_nodes(G, pos, node_size=500, node_color=colors)
   nx.draw_networkx_edges(G, pos, width=1)
   nx.draw_networkx_labels(G, pos ,font_size=16, font_color="#000000")
@@ -584,7 +571,7 @@ def check_addr_range(start, end):
 
 
 def get_ip_addr(hostname):
-  result = '<td>'
+  result = '<td class="neighbors">'
   
   f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt', 'r')
   hosts = f.read().split('\n')
@@ -608,28 +595,6 @@ def get_ip_addr2(hostname):
 
 
 def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict):
-  
-  css = """
-  table.ta1
-  {
-    border-collapse: collapse;
-  }
-  th.ta1
-  {
-    color: #ffffff;
-    background-color: #000000;
-  }
-  td.ta1
-  {
-    background-color: #cccccc;
-  }
-  table.ta1, th.ta1, td.ta1
-  {
-    font-family:Arial, Helvetica, sans-serif;
-    border: 1px solid black;
-    text-align: middle;
-  }
-  """
 
   class ClickInfo(plugins.PluginBase):
     """Plugin for getting info on click"""
@@ -654,52 +619,60 @@ def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict):
         self.dict_ = {"type": "clickinfo",
                       "id": utils.get_id(points),
                       "urls": urls}
-      
+     
+  node_list1 = [hostname]
+  node_list2 = neighbors[:]
   nodes = neighbors[:]
   nodes.append(hostname)
+  
+  for neighbor in neighbors:
+    result =  get_neighbors_list(neighbor, hostname)
+    for n in result:
+      nodes.append(n)
+      port_list = get_port_num_list(n, neighbor)
+      port_dict[n] = port_list
+      port_dict['basehost_' + n] = neighbor
 
-
+  
   G = nx.Graph()
   G.add_nodes_from(nodes)
   colors = []
+  added_nodes = []
+ 
 
-  
   for neighbor in neighbors:
     G.add_edge(hostname, neighbor)
-  
+    added_nodes.append(neighbor)
+    
+
+  for neighbor in neighbors:
+    result =  get_neighbors_list(neighbor, hostname)
+
+    for sub_neighbor in result:
+        G.add_edge(neighbor, sub_neighbor)
+
   pos = nx.spring_layout(G)
-  
   host_addr = {}
   host_addr_list = []
   
-  for key, value in pos.iteritems():
-    host_addr_list.append(get_ip_addr2(key))
+  for node in G.nodes():
 
-    if key == hostname:
+    host_addr_list.append(get_ip_addr2(node))
+    
+    if node == hostname:
       colors.append('r')
     else:
       colors.append('#8fc5ff')
 
-  
   fig, ax = plt.subplots(subplot_kw=dict(axisbg='#EEEEEE'))
   ax.axis('off')
   ax.xaxis.set_major_formatter(plt.NullFormatter())
   ax.yaxis.set_major_formatter(plt.NullFormatter())
 
-  scatter = nx.draw_networkx_nodes(G, pos, node_size=3000, node_shape='s', node_color=colors, ax=ax)
-  line = nx.draw_networkx_edges(G, pos, width=7, ax=ax)
+  scatter = nx.draw_networkx_nodes(G, pos=pos, node_size=3000, node_shape='s', node_color=colors, ax=ax)
+  line = nx.draw_networkx_edges(G, pos=pos, width=7, ax=ax)
   
-  label_pos = {}
-  for key, value in pos.iteritems():
-    label_x = value[0]
-    label_y = value[1] 
-
-    label_pos[key] = np.array([label_x, label_y])
-
-
-  
-  nx.draw_networkx_labels(G, label_pos ,font_size=16, font_color="#000000", ax=ax)
-  
+  nx.draw_networkx_labels(G, pos=pos ,font_size=16, font_color="#000000", ax=ax)
 
   plt.xticks([])
   plt.yticks([])
@@ -707,33 +680,119 @@ def create_neighbors_fig_mpld3(hostname, neighbors, ip_addr, port_dict):
   plt.axis('off')
 
   labels = []
-  for key, value in pos.iteritems():
-    if key == hostname:
-      continue 
-    '''
-    table = '<table class="ta1" border="1">'
-    #table += '<tr class="ta1"><th class="ta1" colspan="2">Interface</th></tr>'
-    table += '<tr class="ta1"><th class="ta1">' + hostname + '</th><th class="ta1">' + key + '</th></tr>'
-    for array in port_dict[key]:
-      table += '<tr class="ta1"><td class="ta1">' + array[0] + '</td><td class="ta1">' + array[1] + '</td></tr>'
-    table += "</table>"
-    '''
-    table = '<table class="table table-bordered">'
-    #table += '<tr class="ta1"><th class="ta1" colspan="2">Interface</th></tr>'
-    table += '<tr class="active"><th>' + hostname + '</th><th>' + key + '</th></tr>'
-    for array in port_dict[key]:
-      table += '<tr class="active"><td>' + array[0] + '</td><td>' + array[1] + '</td></tr>'
-    table += "</table>"
+  
+  
+  for key in G.edges():
     
+    table = '<table class="table table-bordered">'
+    table += '<tr class="active"><th>' + key[0] + '</th><th>' + key[1] + '</th></tr>'
+   
+    result = get_port_pair([key[0], key[1]])
+    
+    for port in result:
+      table += '<tr class="active"><td>' + str(port[0]) + '</td><td>' + str(port[1]) + '</td></tr>'
+    
+    table += "</table>"
     labels.append(table)
 
-
-  tooltip = plugins.PointHTMLTooltip(line, labels=labels, css=css)
+  tooltip = plugins.PointHTMLTooltip(line, labels=labels)
 
   mpld3.plugins.connect(fig, tooltip)
   mpld3.plugins.connect(fig, ClickInfo(scatter, host_addr_list))
   
-  
   mpld3.save_html(fig, config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr, d3_url='./static/d3.v3.min.js', mpld3_url='./static/mpld3.v0.2.js')
 
+
+def get_neighbors_list(hostname, base_host):
+  f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt')
+  addr_list = f.read().rstrip().split('\n')
+  host_addr = ""
+
+  for addr in addr_list:
+    if addr.split(',')[0] == hostname:
+      host_addr = addr.split(',')[1]
+  if host_addr == "":
+    return []
+  
+  
+  try:
+    f = open(config.PYEZ_DEV_INFO_DIR + 'lldp/' + host_addr)
+    html = f.read()
+    soup = BeautifulSoup(html, "lxml")
+    neighbors_list = [tag.text for tag in soup.find_all("td", class_="neighbors")]
+    neighbors_list.remove(base_host)
+    return neighbors_list
+
+  except:
+    return []
+
+def get_port_pair(array):
+  
+  f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt')
+  addr_list = f.read().rstrip().split('\n')
+  left_addr = ""
+
+
+  for addr in addr_list:
+    if addr.split(',')[0] == array[0]:
+      left_addr = addr.split(',')[1]
+      break
+
+  try:
+    f = open(config.PYEZ_DEV_INFO_DIR + 'lldp/' + left_addr)
+    html = f.read()
+    soup = BeautifulSoup(html, "lxml")
+    list1 = soup.find_all("tr", class_ = array[1])
+    result = []
+    for i in list1:
+      result.append([i.find('td', class_="local_i").text, i.find('td', class_="remote_port").text])
+    
+    return result
+  except:
+    return [['-', '-']]
+    
+
+def get_port_num_list(remote_host, base_host):
+  
+  f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt')
+  addr_list = f.read().rstrip().split('\n')
+  host_addr = ""
+
+
+  for addr in addr_list:
+    if addr.split(',')[0] == base_host:
+      base_addr = addr.split(',')[1]
+      break
+
+  try:
+    f = open(config.PYEZ_DEV_INFO_DIR + 'lldp/' + base_addr)
+    html = f.read()
+    soup = BeautifulSoup(html, "lxml")
+    list1 = soup.find_all("tr", class_ = remote_host)
+    result = []
+    for i in list1:
+      result.append([i.find('td', class_="local_i").text, i.find('td', class_="remote_port").text])
+    
+    return result
+  except:
+    return [['-', '-']]
+    
+
+def delete_info_files(ip_addr):
+  if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'facts/' + ip_addr):
+    os.remove(config.PYEZ_DEV_INFO_DIR + 'facts/' + ip_addr)
+  
+  if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'vlans/' + ip_addr):
+    os.remove(config.PYEZ_DEV_INFO_DIR + 'vlans/' + ip_addr)
+  
+  if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr):
+    os.remove(config.PYEZ_DEV_INFO_DIR + 'lldp/' + ip_addr)
+  
+  if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr):
+    os.remove(config.PYEZ_DEV_INFO_DIR + 'fig/' + ip_addr)
+  
+  if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'hardware/' + ip_addr):
+    os.remove(config.PYEZ_DEV_INFO_DIR + 'hardware/' + ip_addr)
+
+  return
 

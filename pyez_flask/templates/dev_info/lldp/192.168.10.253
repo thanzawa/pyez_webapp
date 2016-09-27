@@ -4,9 +4,9 @@
 <th>Remote Hostname</th>
 <th>Remote Interfaces</th>
 </tr>
-<tr>
-<td>ge-0/0/0.0</td>
-<td>switch1</td>
-<td>ge-0/0/2.0</td>
+<tr class="switch1">
+<td class="local_i">ge-0/0/0.0</td>
+<td class="neighbors"><a href="./192.168.10.254">switch1</td>
+<td class="remote_port">ge-0/0/2.0</td>
 </tr>
 </table>

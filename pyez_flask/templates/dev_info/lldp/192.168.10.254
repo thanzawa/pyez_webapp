@@ -1,0 +1,17 @@
+<table class="table table-striped">
+<tr>
+<th>Local Interface</th>
+<th>Remote Hostname</th>
+<th>Remote Interfaces</th>
+</tr>
+<tr class="28:d2:44:df:70:4c">
+<td class="local_i">ge-0/0/0.0</td>
+<td class="neighbors">28:d2:44:df:70:4c</td>
+<td class="remote_port">28:d2:44:df:70:4c</td>
+</tr>
+<tr class="switch2">
+<td class="local_i">ge-0/0/2.0</td>
+<td class="neighbors"><a href="./192.168.10.253">switch2</td>
+<td class="remote_port">ge-0/0/0.0</td>
+</tr>
+</table>

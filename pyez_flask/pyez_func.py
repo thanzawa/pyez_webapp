@@ -37,7 +37,6 @@ def host_to_addr(ip_addr, user, password):
   except:
     print ip_addr + "- not connected"
     delete_info_files(ip_addr)
-    dev.close()
     return
 
   delete_info_files(ip_addr)
@@ -54,7 +53,6 @@ def get_device_information2(ip_addr, user, password):
   try:
     dev.open()
   except:
-    dev.close()
     print 'could not connect'
     if os.path.isfile(config.PYEZ_DEV_INFO_DIR + 'facts/' + ip_addr):
       os.remove(config.PYEZ_DEV_INFO_DIR + 'facts/' + ip_addr)

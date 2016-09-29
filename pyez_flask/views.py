@@ -17,7 +17,7 @@ import time
 import os
 import traceback
 import bs4
-
+import warnings;warnings.filterwarnings('ignore')
 
 @app.route('/')
 def show_entries():
@@ -251,15 +251,13 @@ def collect_dev_info():
   if pyez_func.check_addr_range(start_addr, end_addr) == False:
     return redirect(url_for('show_entries'))
 
-  Dev.query.delete()
-  db.session.commit()
 
   start = time.time()
  
   f = open(config.PYEZ_FLASK_DIR + 'host_addr.txt', 'r')
   addr_list = f.read().rstrip().split('\n')
-
-  for addr in addr_list: 
+  f.close()
+  for addr in addr_list:
     mp = multiprocessing.Process(target=pyez_func.get_device_information2, args=(addr.split(',')[1], user, password))
     mp.start()
    
@@ -298,10 +296,8 @@ def send_cmd(ip_addr, cmds, queue):
 
     result = cfg.diff()
     cfg.commit()
-    print 'commit'
     queue.put(device_addr + result)
   except:
-    print 'error'
     queue.put(device_addr + '\n' + 'unknown command')
 
   finally:
@@ -337,5 +333,4 @@ def host_to_addr(ip_addr, user, password, queue):
 
   queue.put(str(dev_dict.get('hostname')) + ',' + ip_addr)
   return
-
 

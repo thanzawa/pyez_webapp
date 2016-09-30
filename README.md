@@ -23,21 +23,21 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 
 * Connect to Junos devices and collect device informations 
   
-  ![connect](https://github.com/thanzawa/figures/blob/master/pyez_webapp/connect.PNG "connect_device")
+[](  ![connect](https://github.com/thanzawa/figures/blob/master/pyez_webapp/connect.PNG "connect_device"))
 
 * Show device informations at selected devices
 
-  ![show devices](https://github.com/thanzawa/figures/blob/master/pyez_webapp/show_devices.PNG "show_device")
+[](  ![show devices](https://github.com/thanzawa/figures/blob/master/pyez_webapp/show_devices.PNG "show_device"))
 
 * Change configurations at selected devices
   
-  ![send command](https://github.com/thanzawa/figures/blob/master/pyez_webapp/set_commands.PNG "send_commands")
+[](  ![send command](https://github.com/thanzawa/figures/blob/master/pyez_webapp/set_commands.PNG "send_commands"))
 
 * Visualization of network topology using PyEZ, NetworkX, Matplotlib, mpld3
 
-  ![topology](https://github.com/thanzawa/figures/blob/master/pyez_webapp/topology2.png "topology")
+[](  ![topology](https://github.com/thanzawa/figures/blob/master/pyez_webapp/topology2.png "topology"))
   
-  ![info](https://github.com/thanzawa/figures/blob/master/pyez_webapp/detailed_info.PNG "detailed_info")
+[](  ![info](https://github.com/thanzawa/figures/blob/master/pyez_webapp/detailed_info.PNG "detailed_info"))
 
 
 

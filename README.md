@@ -67,7 +67,11 @@ Juniper PyEZを用いたWebアプリケーションを実装しています。
 
 * Install libraries
 
-  `pip install -r requirements.txt`
+  `sudo pip install -r requirements.txt`
+  
+  (If you get the error at matplotlib, please run the following command)
+  
+  `sudo apt-get install python-numpy python-scipy python-matplotlib`
 
 
 * Run
